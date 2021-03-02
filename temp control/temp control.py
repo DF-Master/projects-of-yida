@@ -31,8 +31,6 @@ waittime = waittimedefault
 
 # 根据字符串产生CRC代码并将其拼接为命令
 # CRC 计算代码 https://www.jianshu.com/p/568ac2b3f442
-
-
 def calc_crc(string):
     data = bytearray.fromhex(string)
     crc = 0xFFFF
@@ -161,6 +159,7 @@ def DetectSet(hrnumer='0000', waittime=waittimedefault):  # 返回值是datarev
                     str(str(binascii.b2a_hex(data))[2:-1][-8:-4:]), 16)/10
                 print(datarev)
 
+
 # 产生UI界面
 
 
@@ -181,13 +180,16 @@ class Main(QMainWindow, ui.Ui_MainWindow):
         self.threadtempset.sinOut.connect(self.TextTempsetChange)
         self.pbstart.clicked.connect(self.StartProgram)
         self.pbstop.clicked.connect(self.StopProgram)
+        self.pbadjust.clicked.connect(self.AdjustTempSet)
 
+    # 文本框显示观测值
     def TextTemprevChange(self, str):
         self.texttemprev.setText(str)
 
     def TextTempsetChange(self, str):
         self.texttempset.setText(str)
 
+    # 按钮的关联函数
     def StartProgram(self):
         global startprogram
         startprogram = True
@@ -196,9 +198,14 @@ class Main(QMainWindow, ui.Ui_MainWindow):
         global startprogram
         startprogram = False
 
-
+    def AdjustTempSet(self):
+        waittime = 0
+        global tempset
+        tempset = int(float(self.texttempset.toPlainText()))
+        print(tempset)
+        SetTemp(tempset)
+        waittime =1
 # 利用多線程输出温度测定值和设定值
-
 class ThreadTempRev(QThread):
     sinOut = pyqtSignal(str)
 
@@ -207,12 +214,12 @@ class ThreadTempRev(QThread):
 
     def run(self):
         # 线程相关的代码
-        global startprogram, temprev, waittime,waitinglist
+        global startprogram, temprev, waittime, waitinglist
         while True:
-            if startprogram == True and waitinglist==1:
+            if startprogram == True and waitinglist == 1:
                 DetectTemp()
                 self.sinOut.emit(str(temprev))
-                waitinglist =2 
+                waitinglist = 2
 
             sleep(waittime)
 
@@ -225,12 +232,12 @@ class ThreadTempSet(QThread):
 
     def run(self):
         # 线程相关的代码
-        global startprogram, datarev, waittime,waitinglist
+        global startprogram, datarev, waittime, waitinglist
         while True:
-            if startprogram == True and waitinglist==2:
+            if startprogram == True and waitinglist == 2:
                 DetectSet()
                 self.sinOut.emit(str(datarev))
-                waitinglist= 1
+                waitinglist = 1
 
             sleep(waittime)
 
