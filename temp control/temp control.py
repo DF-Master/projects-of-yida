@@ -1,14 +1,38 @@
 # 导入模块
 
 import serial
-import binascii,time
+import binascii
+import time
+import sys
+import numpy as np
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+import temp_ui as ui
+import datetime
+from time import sleep
 
-# 定义可设置的变量
-tempsetdefault = 30 # 默认温度设定值应当是一个最多为1位小数、最高位为百位的数字
-waittimedefault= 2 # 默认温度测定等待时间，以秒为单位，0.5 s 以下的过快访问会导致不出结果？ 
+
+# 定义默认变量
+tempsetdefault = 30  # 默认温度设定值应当是一个最多为1位小数、最高位为百位的数字
+waittimedefault = 1  # 默认温度测定等待时间，以秒为单位，0.5 s 以下的过快访问会导致不出结果？
+comdefault = 'COM3'
+
+
+# 定义环境变量
+startprogram = False
+uiini = True
+temprev = 0
+datarev = 0
+waitinglist = 1
+waittime = waittimedefault
+
 
 # 根据字符串产生CRC代码并将其拼接为命令
-## CRC 计算代码 https://www.jianshu.com/p/568ac2b3f442
+# CRC 计算代码 https://www.jianshu.com/p/568ac2b3f442
+
+
 def calc_crc(string):
     data = bytearray.fromhex(string)
     crc = 0xFFFF
@@ -22,114 +46,202 @@ def calc_crc(string):
                 crc >>= 1
     return hex(((crc & 0xff) << 8) + (crc >> 8))
 
-## 将字符串去掉特定字母并加和
-def Str_Join(string, icon = ' ', newicon = ''):
+# 将字符串去掉特定字母并加和
+
+
+def Str_Join(string, icon=' ', newicon=''):
     list = string.split(icon)
     newstring = newicon.join(list)
     return newstring
 
-## 将这两个命令合二为一
+# 将这两个命令合二为一
+
 
 def Add_CRC(stringnoCRC):
     stringnoCRC_join = Str_Join(stringnoCRC)
     crc = calc_crc(stringnoCRC)
-    newstring = stringnoCRC + ' ' + crc[-4:-2] +' ' + crc[-2:]
+    newstring = stringnoCRC + ' ' + crc[-4:-2] + ' ' + crc[-2:]
     return newstring
 
 
-
 # 定义输入部分
-
 ser = serial.Serial()
 
-## 串口初始化
+# 串口初始化
+
+
 def initSerial():
     global ser
     ser.baudrate = 9600
     #ser.port = '/dev/ttyUSB0'
-    ser.port = 'COM3'
+    ser.port = comdefault
     #ser.timeout =0
     ser.stopbits = serial.STOPBITS_ONE
     ser.bytesize = 8
     ser.parity = serial.PARITY_NONE
     ser.rtscts = 0
-    
-    
-## 测温模块 https://sunmker.cn/serial_interface/
-def DetectTemp(waittime= waittimedefault):
-    global ser
+
+
+# 测温模块 https://sunmker.cn/serial_interface/
+def DetectTemp(waittime=waittimedefault):  # 返回的值是temprev
+    global ser, temprev
     if seropen == True:
         # 产生查询温度测定值命令
         readtemt = '01 03 10 01 00 01 D1 0A'
-        readtemt16bit=bytes.fromhex(readtemt)
+        readtemt16bit = bytes.fromhex(readtemt)
         # print(readtemt16bit)
-        
+
         # 串口发送数据
-        result=ser.write(readtemt16bit)
+        result = ser.write(readtemt16bit)
 
         # 停止、等待数据，这一步非常关键。timeout压根没用
         # inwaiting: Get the number of bytes in the input buffer
         time.sleep(waittime)
-        count=ser.inWaiting()
-        
+        count = ser.inWaiting()
+
         # 数据的接收
-        if count>0:
-            data=ser.read(count)
-            if data!=b'':
+        if count > 0:
+            data = ser.read(count)
+            if data != b'':
                 # 将接受的16进制数据格式如b'h\x12\x90xV5\x12h\x91\n4737E\xc3\xab\x89hE\xe0\x16'
                 #                      转换成b'6812907856351268910a3437333745c3ab896845e016'
-                #                      通过[]去除前后的b'',得到我们真正想要的数据 
-                print("receive",str(binascii.b2a_hex(data))[2:-1])
-                temprev=int(str(str(binascii.b2a_hex(data))[2:-1][-8:-4:]),16)/10
+                #                      通过[]去除前后的b'',得到我们真正想要的数据
+                print("receive", str(binascii.b2a_hex(data))[2:-1])
+                temprev = int(
+                    str(str(binascii.b2a_hex(data))[2:-1][-8:-4:]), 16)/10
                 print(temprev)
 
-## 设置温度模块 
-def SetTemp(tempset = tempsetdefault):
+# 设置温度模块
+
+
+def SetTemp(tempset=tempsetdefault):
     global ser
     if seropen == True:
-        
+
         # 根据设定温度产生16进制命令
         tempset16bit = hex(tempset*10)[2:].zfill(4)
-        tempsetordernoCRC = str('01 06 00 00 ' + tempset16bit[0:2] + ' ' + tempset16bit[-2:])
-        tempsetorder= bytes.fromhex(Add_CRC(tempsetordernoCRC))
-        
-        # 串口发送数据 
-        print(tempsetorder)
-        ser.write(tempsetorder) # 向仪器输入温度设定命令
+        tempsetordernoCRC = str(
+            '01 06 00 00 ' + tempset16bit[0:2] + ' ' + tempset16bit[-2:])
+        tempsetorder = bytes.fromhex(Add_CRC(tempsetordernoCRC))
 
-## 检测仪器数据模块
-def DetectSet(hrnumer = '0000',waittime= waittimedefault):
-    global serial
+        # 串口发送数据
+        print(tempsetorder)
+        ser.write(tempsetorder)  # 向仪器输入温度设定命令
+
+# 检测仪器数据模块
+
+
+def DetectSet(hrnumer='0000', waittime=waittimedefault):  # 返回值是datarev
+    global serial, datarev
     if seropen == True:
-        
+
         # 产生查询命令
-        detectsetordernoCRC = str('01 03 '+ hrnumer[0:2] +' ' + hrnumer[-2:] + ' 00 01')
-        detectsetorder =  bytes.fromhex(Add_CRC(detectsetordernoCRC))
-        
+        detectsetordernoCRC = str(
+            '01 03 ' + hrnumer[0:2] + ' ' + hrnumer[-2:] + ' 00 01')
+        detectsetorder = bytes.fromhex(Add_CRC(detectsetordernoCRC))
+
         # 串口发送数据
         print(detectsetorder)
         ser.write(detectsetorder)
-        
+
     # 停止、等待数据，这一步非常关键。timeout压根没用
         # inwaiting: Get the number of bytes in the input buffer
         time.sleep(waittime)
-        count=ser.inWaiting()
-        
+        count = ser.inWaiting()
+
         # 数据的接收
-        if count>0:
-            data=ser.read(count)
-            if data!=b'':
+        if count > 0:
+            data = ser.read(count)
+            if data != b'':
                 # 将接受的16进制数据格式如b'h\x12\x90xV5\x12h\x91\n4737E\xc3\xab\x89hE\xe0\x16'
                 #                      转换成b'6812907856351268910a3437333745c3ab896845e016'
-                #                      通过[]去除前后的b'',得到我们真正想要的数据 
-                print("receive",str(binascii.b2a_hex(data))[2:-1])
-                temprev=int(str(str(binascii.b2a_hex(data))[2:-1][-8:-4:]),16)/10
-                print(temprev)
+                #                      通过[]去除前后的b'',得到我们真正想要的数据
+                print("receive", str(binascii.b2a_hex(data))[2:-1])
+                datarev = int(
+                    str(str(binascii.b2a_hex(data))[2:-1][-8:-4:]), 16)/10
+                print(datarev)
 
+# 产生UI界面
+
+
+class Main(QMainWindow, ui.Ui_MainWindow):
+    def __init__(self):
+        # 初始化
+        super().__init__()
+        self.setWindowTitle('温控仪 by yida --UI')
+        self.setupUi(self)
+        # 打开多线程
+        self.threadtemprev = ThreadTempRev()
+        self.threadtemprev.start()
+        self.threadtempset = ThreadTempSet()
+        self.threadtempset.start()
+
+        # 信号与槽函数的连接
+        self.threadtemprev.sinOut.connect(self.TextTemprevChange)
+        self.threadtempset.sinOut.connect(self.TextTempsetChange)
+        self.pbstart.clicked.connect(self.StartProgram)
+        self.pbstop.clicked.connect(self.StopProgram)
+
+    def TextTemprevChange(self, str):
+        self.texttemprev.setText(str)
+
+    def TextTempsetChange(self, str):
+        self.texttempset.setText(str)
+
+    def StartProgram(self):
+        global startprogram
+        startprogram = True
+
+    def StopProgram(self):
+        global startprogram
+        startprogram = False
+
+
+# 利用多線程输出温度测定值和设定值
+
+class ThreadTempRev(QThread):
+    sinOut = pyqtSignal(str)
+
+    def ___init__(self):
+        super(Thread, self).__init__()
+
+    def run(self):
+        # 线程相关的代码
+        global startprogram, temprev, waittime,waitinglist
+        while True:
+            if startprogram == True and waitinglist==1:
+                DetectTemp()
+                self.sinOut.emit(str(temprev))
+                waitinglist =2 
+
+            sleep(waittime)
+
+
+class ThreadTempSet(QThread):
+    sinOut = pyqtSignal(str)
+
+    def ___init__(self):
+        super(Thread, self).__init__()
+
+    def run(self):
+        # 线程相关的代码
+        global startprogram, datarev, waittime,waitinglist
+        while True:
+            if startprogram == True and waitinglist==2:
+                DetectSet()
+                self.sinOut.emit(str(datarev))
+                waitinglist= 1
+
+            sleep(waittime)
+
+
+# 主程序
 if __name__ == "__main__":
     initSerial()
     ser.open()
-    while True:
-        seropen=True
-        DetectSet()
-        DetectTemp()
+    seropen = True
+    app = QtWidgets.QApplication(sys.argv)
+    window = Main()
+    window.show()
+
+    sys.exit(app.exec_())
