@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 waittimedefault = 3
 
 
-# 列表转置
+# 定义列表转置
 
 
 def transpose(matrix):
