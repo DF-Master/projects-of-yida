@@ -7,7 +7,6 @@ import sys
 import numpy as np
 import pandas as pd
 import csv
-
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -184,16 +183,21 @@ class Main(QMainWindow, ui.Ui_MainWindow):
         # 初始化
         super().__init__()
         self.setWindowTitle('温控仪 by yida --UI')
-        self.setupUi(self)
-        # 打开多线程
+        self.setupUi(self) #UI文件在先前的import已有定义
+
+        
+        
+        # 打开多线程，利用多线程读取实时测得的温度与实时的温度设置（在实验中，设定温度一般为常数，考虑到设定温度可能是渐变函数的存在，这里保留实时更新功能）
         self.threadtemprev = ThreadTempRev()
         self.threadtemprev.start()
         self.threadtempset = ThreadTempSet()
         self.threadtempset.start()
 
         # 信号与槽函数的连接
+        ## 
         self.threadtemprev.sinOut.connect(self.TextTemprevChange)
         self.threadtempset.sinOut.connect(self.TextTempsetChange)
+        ## 按钮与函数进行关联
         self.pbstart.clicked.connect(self.StartProgram)
         self.pbstop.clicked.connect(self.StopProgram)
         self.pbadjust.clicked.connect(self.AdjustTempSet)
@@ -209,6 +213,7 @@ class Main(QMainWindow, ui.Ui_MainWindow):
     def StartProgram(self):
         global startprogram
         startprogram = True
+        # 获得所有数据的初始值
 
     def StopProgram(self):
         global startprogram
@@ -225,7 +230,7 @@ class Main(QMainWindow, ui.Ui_MainWindow):
 # 利用多線程输出温度测定值和设定值
 class ThreadTempRev(QThread):
     sinOut = pyqtSignal(str)
-
+    #初始化
     def ___init__(self):
         super(Thread, self).__init__()
 
@@ -236,7 +241,7 @@ class ThreadTempRev(QThread):
             if startprogram == True and waitinglist == 1:
                 DetectTemp()
                 self.sinOut.emit(str(temprev))
-                waitinglist = 2
+                waitinglist = 2 #下一步为读取设定温度值
 
             sleep(waittime)
 
@@ -254,9 +259,9 @@ class ThreadTempSet(QThread):
             if startprogram == True and waitinglist == 2:
                 DetectSet()
                 self.sinOut.emit(str(datarev))
-                waitinglist = 1
+                waitinglist = 1 #下一步为读取实时温度
                 #将结果保存进csv
-                WriteLine(str(temprev),str(datarev),str(datetime.datetime.fromtimestamp(time.time()).strftime('%M:%S'))) #%Y-%m-%d  %H:%M:%S
+                WriteLine(str(temprev),str(datarev),str(datetime.datetime.fromtimestamp(time.time()).strftime('%H:%M:%SS'))) #将结果保存入CSV的最后一行 #%Y-%m-%d  %H:%M:%S
 
             sleep(waittime)
 
@@ -264,10 +269,7 @@ class ThreadTempSet(QThread):
 # 主程序
 if __name__ == "__main__":
     #初始化datalog.csv
-    temprevlist = []
-    tempsetlist = []
-    timeloglist = []
-    dataframe = pd.DataFrame({'TempRev':temprevlist,'TempSet':tempsetlist,'TimeLog':timeloglist})
+    dataframe = pd.DataFrame({'TempRev':[],'TempSet':[],'TimeLog':[]})
         ##将DataFrame存储为csv,index表示是否显示行名，default=True
     dataframe.to_csv("temp control\datalog.csv",index=False,sep=',')
     #初始化串口
