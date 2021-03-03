@@ -1,10 +1,13 @@
 # 导入模块
 
 import serial
-import binascii
+import binascii 
 import time
 import sys
 import numpy as np
+import pandas as pd
+import csv
+
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -25,8 +28,11 @@ startprogram = False
 uiini = True
 temprev = 0
 datarev = 0
+tempset = 0
 waitinglist = 1
 waittime = waittimedefault
+timelog = time.time()
+
 
 
 # 根据字符串产生CRC代码并将其拼接为命令
@@ -160,6 +166,16 @@ def DetectSet(hrnumer='0000', waittime=waittimedefault):  # 返回值是datarev
                 print(datarev)
 
 
+# 向datalog.csv文件写入一行数据
+def WriteLine(element1,element2,element3,csvfile = './temp control/datalog.csv'):
+    with open(csvfile,"a",newline='') as csvfile_edit:
+        csv.writer(csvfile_edit).writerow([element1, element2,element3])
+        
+        
+        
+
+
+
 # 产生UI界面
 
 
@@ -205,6 +221,7 @@ class Main(QMainWindow, ui.Ui_MainWindow):
         print(tempset)
         SetTemp(tempset)
         waittime =1
+        
 # 利用多線程输出温度测定值和设定值
 class ThreadTempRev(QThread):
     sinOut = pyqtSignal(str)
@@ -232,21 +249,32 @@ class ThreadTempSet(QThread):
 
     def run(self):
         # 线程相关的代码
-        global startprogram, datarev, waittime, waitinglist
+        global startprogram, temprev, datarev, waittime, waitinglist
         while True:
             if startprogram == True and waitinglist == 2:
                 DetectSet()
                 self.sinOut.emit(str(datarev))
                 waitinglist = 1
+                #将结果保存进csv
+                WriteLine(str(temprev),str(datarev),str(datetime.datetime.fromtimestamp(time.time()).strftime('%M:%S'))) #%Y-%m-%d  %H:%M:%S
 
             sleep(waittime)
 
 
 # 主程序
 if __name__ == "__main__":
+    #初始化datalog.csv
+    temprevlist = []
+    tempsetlist = []
+    timeloglist = []
+    dataframe = pd.DataFrame({'TempRev':temprevlist,'TempSet':tempsetlist,'TimeLog':timeloglist})
+        ##将DataFrame存储为csv,index表示是否显示行名，default=True
+    dataframe.to_csv("temp control\datalog.csv",index=False,sep=',')
+    #初始化串口
     initSerial()
     ser.open()
     seropen = True
+    #产生UI
     app = QtWidgets.QApplication(sys.argv)
     window = Main()
     window.show()
