@@ -1,0 +1,1 @@
+"C:\Program Files\Python38\Scripts\streamlit.exe" run "C:\Users\jiang\Documents\GitHub\projects-of-yida\temp-control\postonline.py"

@@ -1,0 +1,1 @@
+streamlit run .\Documents\GitHub\projects-of-yida\temp-control\postonline.py

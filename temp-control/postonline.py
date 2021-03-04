@@ -61,7 +61,7 @@ def make_plot(datafile, num=35):
 
 # 形成网页UI
 # 加载数据
-def load_data(dataloc="C:/Users/jiang/Documents/GitHub/projects-of-yida/temp control/datalog.csv" ,max=30):
+def load_data(dataloc="C:/Users/jiang/Documents/GitHub/projects-of-yida/temp-control/datalog.csv" ,max=30):
     reader = pd.read_csv(dataloc)
     readerlist = reader.values.tolist()
     if len(readerlist)> max:
@@ -99,9 +99,9 @@ def st_generate():
 # 以下是主程序
 
 st.title("温控器网页UI")
-st.markdown(read_markdown_file('README.md'),unsafe_allow_html=True)
+st.markdown(read_markdown_file('C:/Users/jiang/Documents/GitHub/projects-of-yida/temp-control/README.md'),unsafe_allow_html=True)
 st.header('默认参数 Default Index')
-statuslist = load_data("C:/Users/jiang/Documents/GitHub/projects-of-yida/temp control/statuslog.csv")
+statuslist = load_data("C:/Users/jiang/Documents/GitHub/projects-of-yida/temp-control/statuslog.csv")
 st.table(pd.DataFrame(statuslist[-3:], columns=['名称', '默认值', '时间戳']))
 st.text('* Default index are not live, F5 to refresh.')
 

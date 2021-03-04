@@ -187,7 +187,7 @@ def DetectSet(hrnumer='0000', waittime=waittimedefault):  # 返回值是datarev
 
 
 # 向datalog.csv文件写入一行数据
-def WriteLine(element1, element2, element3, csvfile='./temp control/datalog.csv'):
+def WriteLine(element1, element2, element3, csvfile='./temp-control/datalog.csv'):
     with open(csvfile, "a", newline='') as csvfile_edit:
         csv.writer(csvfile_edit).writerow([element1, element2, element3])
 
@@ -252,9 +252,9 @@ class Main(QMainWindow, ui.Ui_MainWindow):
         kd = str(datarev*10)
         self.KD.setText(kd)
         #将配置参数写入statuslog.csv中
-        WriteLine('KP',str(kp),NowTime(),csvfile="./temp control/statuslog.csv")
-        WriteLine('KI',str(ki),NowTime(),csvfile="./temp control/statuslog.csv")
-        WriteLine('KD',str(kd),NowTime(),csvfile="./temp control/statuslog.csv")
+        WriteLine('KP',str(kp),NowTime(),csvfile="./temp-control/statuslog.csv")
+        WriteLine('KI',str(ki),NowTime(),csvfile="./temp-control/statuslog.csv")
+        WriteLine('KD',str(kd),NowTime(),csvfile="./temp-control/statuslog.csv")
         QMessageBox.information(self,'提示','初始化完成。')
 
         startprogram = True
@@ -343,14 +343,14 @@ if __name__ == "__main__":
     # 初始化datalog.csv,statuslog.csv
     dataframe = pd.DataFrame({'TempRev': [], 'TempSet': [], 'TimeLog': []})
     ## 将DataFrame存储为csv,index表示是否显示行名，default=True
-    dataframe.to_csv("temp control\datalog.csv", index=False, sep=',')
+    dataframe.to_csv("temp-control\datalog.csv", index=False, sep=',')
     ##同理
     dataframe = pd.DataFrame({'Name': [], 'Data': [], 'TimeLog': []})
-    dataframe.to_csv("temp control\statuslog.csv", index=False, sep=',')
+    dataframe.to_csv("temp-control\statuslog.csv", index=False, sep=',')
     ## 为后者增加第一行数据以防出错
-    WriteLine('KP','0',NowTime(),csvfile="./temp control/statuslog.csv")
-    WriteLine('KI','0',NowTime(),csvfile="./temp control/statuslog.csv")
-    WriteLine('KD','0',NowTime(),csvfile="./temp control/statuslog.csv")
+    WriteLine('KP','0',NowTime(),csvfile="./temp-control/statuslog.csv")
+    WriteLine('KI','0',NowTime(),csvfile="./temp-control/statuslog.csv")
+    WriteLine('KD','0',NowTime(),csvfile="./temp-control/statuslog.csv")
 
 
     # 初始化串口
