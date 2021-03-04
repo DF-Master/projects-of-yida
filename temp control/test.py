@@ -5,19 +5,99 @@ from matplotlib.lines import Line2D
 import numpy as np
 import pandas as pd
 import csv
+import serial
+import binascii
+import time
+import sys
+import numpy as np
+import pandas as pd
+import csv
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+import temp_ui as ui
+import datetime
+from time import sleep
+from tkinter import messagebox
 
-def load_data(max=30):
-    reader = pd.read_csv("C:/Users/jiang/Documents/GitHub/projects-of-yida/temp control/datalog.csv")
-    readerlist = reader.values.tolist()
-    if len(readerlist)> max:
-        readerlist= reader.tail(max).values.tolist()
-    return readerlist
+import sys
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+class MyWindow(QWidget):
+    def __init__(self,parent=None):
+        super(MyWindow,self).__init__(parent)
+        self.setWindowTitle("弹出式对话框例子")
+        self.resize(400,200)
+        self.btn1=QPushButton(self)
+        self.btn1.setText("消息框")
+        self.btn1.clicked.connect(self.msg1)
+        layout=QVBoxLayout()
 
-print(type(load_data()))
+        self.btn2=QPushButton(self)
+        self.btn2.setText("问答对话框")
+        self.btn2.clicked.connect(self.msg2)
+
+        self.btn3=QPushButton()
+        self.btn3.setText("警告对话框")
+        self.btn3.clicked.connect(self.msg3)
+
+        self.btn4=QPushButton()
+        self.btn4.setText("严重错误对话框")
+        self.btn4.clicked.connect(self.msg4)
+
+        self.btn5=QPushButton()
+        self.btn5.setText("关于对话框")
+        self.btn5.clicked.connect(self.msg5)
+
+        layout.addWidget(self.btn1)
+        layout.addWidget(self.btn2)
+        layout.addWidget(self.btn3)
+        layout.addWidget(self.btn4)
+        layout.addWidget(self.btn5)
+
+        self.setLayout(layout)
+
+    
+    def msg1(self):
+        #使用infomation信息框
+        QMessageBox.information(self,"标题","消息正文",QMessageBox.Yes|QMessageBox.No,QMessageBox.Yes)
+    def msg2(self):
+         QMessageBox.question(self,"标题","问答消息正文",QMessageBox.Yes|QMessageBox.No,QMessageBox.Yes)
+    def msg3(self):
+        QMessageBox.warning(self,"标题","警告消息正文",QMessageBox.Yes|QMessageBox.No,QMessageBox.Yes)
+    def msg4(self):
+        QMessageBox.critical(self,"标题","严重错误消息正文",QMessageBox.Yes|QMessageBox.No,QMessageBox.Yes)
+    def msg5(self):
+        QMessageBox.about(self,"标题","关于消息正文")
+
+if __name__=="__main__":
+    app=QApplication(sys.argv)
+    win=MyWindow()
+    win.show()
+    sys.exit(app.exec_())
 
 
 
 
-
-        self.texttempset.setText(DetectSet())
-       # self.KP.setText(DetectSet('0004'))
+def WriteLine(element1, element2, element3, csvfile='./temp control/datalog.csv'):
+    with open(csvfile, "a", newline='') as csvfile_edit:
+        csv.writer(csvfile_edit).writerow([element1, element2, element3])
+        
+        
+        
+# 信息框
+QMessageBox.information(self, '框名', '内容', 按钮s, 默认按钮) 
+# 问答框
+QMessageBox.question(self, '框名', '内容', 按钮s, 默认按钮)
+# 警告框
+QMessageBox.warning(self, '框名', '内容', 按钮s, 默认按钮) 
+# 危险框
+QMessageBox.critical(self, '框名', '内容', 按钮s, 默认按钮)
+# 关于框
+QMessageBox.about(self, '框名', '内容') 
+       
+————————————————
+版权声明：本文为CSDN博主「Wang_Jiankun」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/Wang_Jiankun/article/details/83269859

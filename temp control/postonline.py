@@ -9,6 +9,11 @@ import matplotlib.pyplot as plt
 # 设置默认变量^
 waittimedefault = 10
 
+#读取外部md
+def read_markdown_file(markdown_file):
+    with open(markdown_file, encoding='utf-8') as fp:
+        w = fp.read()
+    return w
 
 # 定义列表转置
 
@@ -56,8 +61,8 @@ def make_plot(datafile, num=35):
 
 # 形成网页UI
 # 加载数据
-def load_data(max=30):
-    reader = pd.read_csv("C:/Users/jiang/Documents/GitHub/projects-of-yida/temp control/datalog.csv")
+def load_data(dataloc="C:/Users/jiang/Documents/GitHub/projects-of-yida/temp control/datalog.csv" ,max=30):
+    reader = pd.read_csv(dataloc)
     readerlist = reader.values.tolist()
     if len(readerlist)> max:
         readerlist= reader.tail(max).values.tolist()
@@ -71,6 +76,8 @@ def st_generate():
     datanow = st.empty()
     datanow.table(pd.DataFrame(
         csvshow[-1:], columns=['当前温度', '设置温度', '时间戳']))
+    datanowinfo = st.empty()
+    datanowinfo.text('* Delay Time can be several seconds.')
     datalineplottitle = st.empty()
     datalineplottitle = st.header('近期温度变化图 Data LinePlot')
     datalineplot = st.empty()
@@ -84,13 +91,20 @@ def st_generate():
     datanow.empty()
     datalog.empty()
     titletemplog.empty()
+    datanowinfo.empty()
     datalineplottitle.empty()
     csvshow = load_data()
     datalineplot.empty()
 
+# 以下是主程序
 
 st.title("温控器网页UI")
-st.markdown('> made by [Yida](https://github.com/DF-Master) --210303 update')
+st.markdown(read_markdown_file('README.md'),unsafe_allow_html=True)
+st.header('默认参数 Default Index')
+statuslist = load_data("C:/Users/jiang/Documents/GitHub/projects-of-yida/temp control/statuslog.csv")
+st.table(pd.DataFrame(statuslist[-3:], columns=['名称', '默认值', '时间戳']))
+st.text('* Default index are not live, F5 to refresh.')
+
 st.header('当前数据 Data Now')
 
 
