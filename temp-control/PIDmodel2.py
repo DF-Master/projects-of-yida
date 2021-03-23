@@ -113,37 +113,58 @@ class PID_Prama:
         self.error_prev = 0
         self.error_sum = 0
 
-# 增量计算公式：
-# Pout=Kp*[e(t) - e(t-1)] + Ki*e(t) + Kd*[e(t) - 2*e(t-1) +e(t-2)]
-
-
-def PID_Controller_Increa(pid, out_now):
-    error = pid.set_val - out_now
-    Res = pid.Kp*(error-pid.error_last) + pid.Ki*error + \
-        pid.Kd*(error-2*pid.error_last+pid.error_prev)
-    pid.error_prev = pid.error_last
-    pid.error_last = error
-    return Res
-
 
 standard_out = 80
 Time = 80
+standard_out_list = []
+
+# 增量计算公式：
+# Pout=Kp*[e(t)] + Ki*e(t)all + Kd*[e(t) - e(t-1)]
+
+
+def PID_Controller_Increa(pid, out_now):
+    global errorall
+    error = pid.set_val - out_now
+    Res = pid.Kp*(error) + pid.Ki*pid.error_sum + pid.Kd*(error-pid.error_prev)
+    pid.error_prev = error
+    pid.error_sum = pid.error_sum + error
+    print(error)
+    print(pid.error_sum)
+    return Res
+
+
+for i in range(Time):
+    standard_out_list.append(standard_out)
 
 
 def Draw(kp=0.01, ki=0.1, kd=0.05):
+
     PID_val = PID_Prama()
     # PID参数
     PID_val.Kp = kp
     PID_val.Ki = ki
     PID_val.Kd = kd
     PID_val.set_val = standard_out  # 标准输出值
+    PID_val.error_sum = 0
+    PID_val.error_prev = 0
     # 增量型PID控制器输出值
     PID_Controller_Increa_Out = []
     Sys_In = []
     # 0时刻系统输入值
     Sys_In.append(4)
     # 系统响应函数
-    def SystemFunc(x): return 5*x + np.random.normal(0, 0.5, 1)[0]
+    def SystemFunc(x, y=1,z=True):
+        if z ==True:
+            return 5*x + 2*np.random.normal(0, 0.5, 1)[0] +3*np.sin(0.3*y) + 5*np.sin(0.1*y) +5
+        else:
+            return 5*x + 2*np.random.normal(0, 0.5, 1)[0] +3*np.sin(0.3*y) + 5*np.sin(0.1*y) -20 +2*y
+            # if y<40:
+            #     return 5*x + 2*np.random.normal(0, 0.5, 1)[0] +3*np.sin(0.3*y) + 5*np.sin(0.1*y) +5
+            # else:
+            #     return 5*x + 2*np.random.normal(0, 0.5, 1)[0] +3*np.sin(0.3*y) + 9*np.sin(0.1*y) +30 -0.1*y +10*np.sin(y)
+
+            
+            
 
     Sys_Out = []
     # 0时刻系统输出值
@@ -154,7 +175,8 @@ def Draw(kp=0.01, ki=0.1, kd=0.05):
         PID_Controller_Increa_Out.append(Diff)  # 记录所有的系统误差
         # 计算增量之后的新的系统输入
         Sys_In.append(Sys_In[0]+np.sum(PID_Controller_Increa_Out))
-        Sys_Out.append(SystemFunc(Sys_In[t_slice+1]))  # 计算下一时刻系统新的输出值
+        # 计算下一时刻系统新的输出值
+        Sys_Out.append(SystemFunc(Sys_In[t_slice+1], y=t_slice,z=False))
 
     standard = np.linspace(PID_val.set_val, PID_val.set_val, Time)
     return Sys_Out
@@ -163,12 +185,25 @@ def Draw(kp=0.01, ki=0.1, kd=0.05):
 plt.figure('PID_Controller_Increa')
 plt.xlim(0, Time)
 plt.ylim(0, 2*standard_out)
-plt.plot(Draw(kp=0.01, ki=0.1, kd=0.05), label='kp=0.01, ki=0.1, kd=0.05')
-plt.plot(Draw(kp=0.01, ki=0.1, kd=0.01), label='kp=0.01, ki=0.1, kd=0.01')
-plt.plot(Draw(kp=0.01, ki=0.15, kd=0.05), label='kp=0.01, ki=0.15, kd=0.05')
-plt.plot(Draw(kp=0.005, ki=0.1, kd=0.05), label='kp=0.005, ki=0.1, kd=0.05')
+plt.plot(Draw(kp=0.00, ki=0.00, kd=0.00), 'g', label='Disturbance')
+
+# plt.plot(Draw(kp=0.05, ki=0.01, kd=0.15),label='kp = 0.05, ki = 0.01, kd = 0.15')
+
+
+
+
+plt.plot(Draw(kp=0.05, ki=0.0, kd=0.00), label='kp = 0.05, ki = 0.00, kd = 0.00')
+plt.plot(Draw(kp=0.05, ki=0.01, kd=0.00),label='kp = 0.05, ki = 0.01, kd = 0.00')
+
+# plt.plot(Draw(kp=0.35, ki=0.0, kd=0.00), label='kp = 0.35, ki = 0.0, kd = 0.00')
+
+# plt.plot(Draw(kp=0.15, ki=0.0, kd=0.00), label='kp = 0.15, ki = 0.0, kd = 0.00')
+
+
+plt.plot(standard_out_list, ':r', label='Standard_out')
+
 plt.xlabel('Time', fontsize=18)
 plt.ylabel('Temp.', fontsize=18)
-
+plt.grid(linestyle='--', alpha=0.5)
 plt.legend(loc='upper left', shadow=True, fancybox=True)
 plt.show()

@@ -31,8 +31,7 @@ for i in range(100):
         time.sleep(0.1)
         y=pid(system_output)
         system_output=y
-        lst.append(y)
-    lst_y[-1]=y    
+        lst.append(y)   
 
     
 t2=time.time()
@@ -45,5 +44,4 @@ plt.plot(lst_systemout,label='before PID')
 plt.plot(lst_y, label='after PID')
 plt.legend(fontsize=15)
 plt.tick_params(labelsize=18)
-.legend(loc='upper left', shadow=True, fancybox=True)
 plt.show()
