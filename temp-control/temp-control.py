@@ -1,7 +1,7 @@
 # 导入模块
 
 import serial
-import binascii
+ 
 import time
 import sys
 import numpy as np
