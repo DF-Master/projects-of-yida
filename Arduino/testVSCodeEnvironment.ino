@@ -36,12 +36,12 @@ void setup() {
     // SPI.begin();
     // rf.PCD_Init();
 
-// PCD
+// LCD
 
     // gIr.enableIRIn();
 
 // 串口通信
-    Serial.begin(9600);
+    // Serial.begin(9600);
 }
 
 void loop() {
@@ -143,15 +143,29 @@ void loop() {
         // decode_results dr;
         // if (!gIr.decode(& dr)) return;
         // gIr.resume();
+
         // if (dr.value > 0x08FFFFFF) return;
         // char button = (dr.value/256) % 256;
         // module1638.setNumberPad(button,7,3);
         // delay(100);
 
+
+//         if (!gIr.decode())
+//         return;
+//         gIr.resume();
+//         dr = gIr.decodedIRData.decodedRawData;
+//         Serial.println(dr);
+//         if (dr > 0x08FFFFFF)
+//             return;
+//         char button = (dr / 256) % 256;
+//         modu1638.setNumberPad(button, 7, 3);
+//         delay(100);
 // IRC
 
-        Serial.println(x);
-        x ++;
-        delay(1000);
+        // Serial.println(x);
+        // x ++;
+        // delay(1000);
+
+// Serial
 
 }
