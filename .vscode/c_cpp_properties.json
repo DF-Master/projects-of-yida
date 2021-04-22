@@ -17,6 +17,13 @@
             "includePath": [
                 "C:\\Users\\jiang\\OneDrive\\software\\arduino\\arduino-1.8.13\\hardware\\arduino\\avr\\cores\\arduino",
                 "C:\\Users\\jiang\\OneDrive\\software\\arduino\\arduino-1.8.13\\hardware\\arduino\\avr\\variants\\eightanaloginputs",
+                "C:\\Users\\jiang\\Documents\\Arduino\\libraries\\Servo\\src",
+                "C:\\Users\\jiang\\Documents\\Arduino\\libraries\\SparkFun_ADXL345_Arduino_Library\\src",
+                "C:\\Users\\jiang\\OneDrive\\software\\arduino\\arduino-1.8.13\\hardware\\arduino\\avr\\libraries\\Wire\\src",
+                "C:\\Users\\jiang\\Documents\\Arduino\\libraries\\LiquidCrystal_PCF8574\\src",
+                "C:\\Users\\jiang\\Documents\\Arduino\\libraries\\MFRC522\\src",
+                "C:\\Users\\jiang\\OneDrive\\software\\arduino\\arduino-1.8.13\\hardware\\arduino\\avr\\libraries\\SPI\\src",
+                "C:\\Users\\jiang\\Documents\\Arduino\\libraries\\IRremote\\src",
                 "c:\\users\\jiang\\onedrive\\software\\arduino\\arduino-1.8.13\\hardware\\tools\\avr\\lib\\gcc\\avr\\7.3.0\\include",
                 "c:\\users\\jiang\\onedrive\\software\\arduino\\arduino-1.8.13\\hardware\\tools\\avr\\lib\\gcc\\avr\\7.3.0\\include-fixed",
                 "c:\\users\\jiang\\onedrive\\software\\arduino\\arduino-1.8.13\\hardware\\tools\\avr\\avr\\include"
