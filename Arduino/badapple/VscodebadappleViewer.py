@@ -14,7 +14,7 @@ for i in range(6569):
     ret, bw_img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
     bw_img=bw_img//255
     print(bw_img)
-    time.sleep(0.033)
+    # time.sleep(0.033)
     
     with open("Arduino\\badapple\\img.csv","a",newline='') as csvfile_edit:
         csv.writer(csvfile_edit).writerow(['##'])
