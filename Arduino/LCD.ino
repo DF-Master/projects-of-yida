@@ -42,24 +42,26 @@ void loop()
             byte smiley[8] = {
             B00000,B10001,B00100,B00000,B10001,B01110,B00000,B11111
             };
-            byte smiley2[8] = {
-            B00000,B10001,B00100,B00000,B10001,B01110,B11111,B11111
-            };
-            byte smiley3[8] = {
-            B11111,B10001,B00100,B00000,B10001,B01110,B11111,B11111
-            };
+            char buffer[8];
+            Serial.readBytes(buffer,8);
+//            byte smiley2[8] = {
+//            B00000,B10001,B00100,B00000,B10001,B01110,B11111,B11111
+//            };
+//            byte smiley3[8] = {
+//            B11111,B10001,B00100,B00000,B10001,B01110,B11111,B11111
+//            };
 
-            gLCD.createChar(0,smiley);
-            gLCD.createChar(1,smiley2);
-            gLCD.createChar(2,smiley3);
+            gLCD.createChar(0,buffer);
+//            gLCD.createChar(1,smiley2);
+//            gLCD.createChar(2,smiley3);
             gLCD.begin(16, 2);
             gLCD.write(byte(0));
-            gLCD.write(byte(1));
-            gLCD.write(byte(2));
-            gLCD.setCursor(0, 1);
-            gLCD.write(byte(0));
-            gLCD.write(byte(1));
-            gLCD.write(byte(2));
+//            gLCD.write(byte(1));
+//            gLCD.write(byte(2));
+//            gLCD.setCursor(0, 1);
+//            gLCD.write(byte(0));
+//            gLCD.write(byte(1));
+//            gLCD.write(byte(2));
         }
     }
 }
