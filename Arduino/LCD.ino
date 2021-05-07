@@ -12,8 +12,9 @@ void setup()
     Serial.begin(9600);
     gLCD.clear();
     gLCD.begin(16, 2);
-    gLCD.home(); 
+    gLCD.home();
     gLCD.print("Hello World ...");
+    // 打开，并播放hello world
 }
 
 char NewDigit;
@@ -23,103 +24,80 @@ bool NewInput = false;
 bool StartShow = false;
 bool CursorMoveOn = false;
 bool CursorNewLine = false;
-int row = 0;
+
 int ls = 0;
 
 void loop()
 {
-    // gLCD.setCursor(1,3);
-    // gLCD.print(millis() / 1000);
 
-    
-    // if (Serial.available()) {//查看串口是否有数据
-    //     delay(100);
-    //     gLCD.clear();//清屏
-
-
-
-    //     while (Serial.available() > 0) {//接收串口数据
-    //         NewDigit = Serial.read();
-    //         gLCD.begin(16,2);
-    //         gLCD.write(NewDigit);
-    //         // Serial.readBytes(buffer,8);
-    //         // gLCD.createChar(0,buffer);
-    //         // gLCD.begin(16, 2);
-    //         // gLCD.write(byte(0));
-
-    //     }
-
-    // CursorMoveOn
-    if (CursorMoveOn ==true)
+    // CursorMoveOn 确定了进行到第几个5*8单元，通过输入[来启动
+    if (CursorMoveOn == true)
     {
         CursorMoveOn = false;
         // gLCD.setCursor(ls,row);
         // gLCD.write('TEST');
-        if (ls<7)
+        if (ls < 7)
         {
-            ls= ls + 1;
+            ls = ls + 1;
             return;
         }
         ls = 0;
         return;
-
     }
-
 
     // make 5*8 matrix
-    if (NewInput==false && StartShow==false) return;
-    if (NewInput==true) 
+    if (NewInput == false && StartShow == false)
+        return;
+    if (NewInput == true)
     {
-        NewInput =false;
-        for(int i =0;i<39;i++) digits[i] = digits[i+1];
+        NewInput = false;
+        for (int i = 0; i < 39; i++)
+            digits[i] = digits[i + 1];
         digits[39] = NewDigit; //digits中都是‘’的字符形式
     }
-    
-    // show 5*8
-    if (StartShow==false) return;
+
+    // show 5*8，这部分生成了一个5*8的单元，通过Buffer保存在LCD的ls位置
+    if (StartShow == false)
+        return;
     StartShow = false;
-    for(int i = 0;i<8;i++)
+    for (int i = 0; i < 8; i++)
     {
 
-        buffer[i]=0+(digits[i*5]-'0')*16+(digits[i*5+1]-'0')*8+(digits[i*5+2]-'0')*4+(digits[i*5+3]-'0')*2+(digits[i*5+4]-'0')*1;
-        gLCD.createChar(ls,buffer);
-        
-        // gLCD.setCursor(i,0);
-        // gLCD.write(digits[i]);
+        buffer[i] = 0 + (digits[i * 5] - '0') * 16 + (digits[i * 5 + 1] - '0') * 8 + (digits[i * 5 + 2] - '0') * 4 + (digits[i * 5 + 3] - '0') * 2 + (digits[i * 5 + 4] - '0') * 1;
+        gLCD.createChar(ls, buffer); //将buffer保存到ls
     }
-    // gLCD.clear();
-    // gLCD.begin(16,2);
-    // gLCD.write(byte(0));
-    if(ls ==0)
+
+    if (ls == 0) //完成了8个5*8单元时，开始刷新屏幕
     {
         gLCD.clear();
-        gLCD.begin(16,2);
+        gLCD.begin(16, 2);
         gLCD.home();
-        gLCD.setCursor(0,0);
-        for(int i = 0;i<4;i++)
+        gLCD.setCursor(0, 0);
+
+        for (int i = 0; i < 4; i++)
         {
-            gLCD.write(byte(i+1));
+            gLCD.write(byte(i + 1));
         }
-        gLCD.setCursor(0,1);
-        for(int i = 0;i<3;i++)
+
+        gLCD.setCursor(0, 1);
+        for (int i = 0; i < 3; i++)
         {
-            gLCD.write(byte(i+5));
+            gLCD.write(byte(i + 5));
         }
+        
         gLCD.write(byte(0));
     }
-
 }
-    
+
 void serialEvent()
 {
-    if(!Serial.available()) return;
+    if (!Serial.available())
+        return;
     NewDigit = (char)Serial.read();
-    if((NewDigit >='0') && (NewDigit<='9'))
-        NewInput=true;
-    if(NewDigit==']')
-        StartShow=true;
-    if(NewDigit=='[')
-        CursorMoveOn=true;
-
-
+    if ((NewDigit >= '0') && (NewDigit <= '1'))
+        NewInput = true;
+    if (NewDigit == ']')
+        StartShow = true;
+    if (NewDigit == '[')
+        CursorMoveOn = true;
 }
