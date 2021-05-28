@@ -13,8 +13,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // 以上部分是12864的初始化
 
-#include "BluetoothSerial.h"
-BluetoothSerial SerialBT;
+// #include "BluetoothSerial.h"
+// BluetoothSerial SerialBT;
 
 unsigned char PROGMEM logo_bmp[] =
     {
@@ -1105,16 +1105,16 @@ void setup()
     // 至此，展示logo,屏幕初始化完成
 
 
-    display.clearDisplay();
+    // display.clearDisplay();
 
-    display.setTextSize(1.5);             // Normal 1:1 pixel scale
-    display.setTextColor(SSD1306_WHITE);        // Draw white text
-    display.setCursor(0,0);             // Start at top-left corner
-    display.println(F("Hello, world!"));
-    display.setTextSize(1);
-    display.println(F("BT send 0 to test connect"));
-    display.println(F("BT send 1 to start bad apple"));
-    display.display();
+    // display.setTextSize(1.5);             // Normal 1:1 pixel scale
+    // display.setTextColor(SSD1306_WHITE);        // Draw white text
+    // display.setCursor(0,0);             // Start at top-left corner
+    // display.println(F("Hello, world!"));
+    // display.setTextSize(1);
+    // display.println(F("BT send 0 to test connect"));
+    // display.println(F("BT send 1 to start bad apple"));
+    // display.display();
 
 
 }
