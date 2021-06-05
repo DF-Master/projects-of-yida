@@ -1,7 +1,7 @@
 # 导入模块
 
 import serial
- 
+import binascii
 import time
 import sys
 import numpy as np
@@ -19,7 +19,7 @@ from tkinter import messagebox
 # 定义默认变量
 tempsetdefault = 30  # 默认温度设定值应当是一个最多为1位小数、最高位为百位的数字
 waittimedefault = 3  # 默认温度测定等待时间，以秒为单位，0.5 s 以下的过快访问会导致不出结果？ 因为远程通讯需要时间，寄存器可能来不及反应，建议不要太快
-comdefault = 'COM3'
+comdefault = 'COM5'
 
 
 # 定义环境变量
