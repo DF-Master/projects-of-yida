@@ -39,13 +39,13 @@ test_X = poly_features.fit_transform(X_test.reshape(-1, 1)) #reshape (-1,1)ËΩ¨Êç
 lambda_to_y_list = []
 list_collect_0 = []
 
-for lam in range(20):
+for lam in np.logspace(-6, 6, 100):
     
     # Train Data
     # ==============================================
     # ==============================================
-    
-    lambda_ = np.power(2,lam)/np.power(2,10) # Regularization factor
+    lambda_ =lam
+    # lambda_ = np.power(2,lam)/np.power(2,10) # Regularization factor
     train_model = linear_model.Ridge(alpha=lambda_, fit_intercept=True) # Create a ridge regression model
     train_model.fit(train_X, y) # Training
 
@@ -84,9 +84,19 @@ for lam in range(20):
     list_collect_0.append(lambda_to_y_list)
 
 
-    
-# show the lambda_to_result plot
+# show the min test_rmse data
 list_collect_0 = list(map(list,zip(*list_collect_0)))
+
+index = list_collect_0[-1].index(min(list_collect_0[-1]))
+print(list_collect_0[-1])
+print("="*20, "# Predict_MIN_Test_RMSE", "="*20, sep='\n')
+print("Train RMSE = %.3f" % list_collect_0[1][index],'\n',"Lambda = %.2f" % list_collect_0[0][index],'\n',"Test RMSE = %.3f" % list_collect_0[-1][index])
+print("="*20, "# Model Parameters", "="*20, sep='\n')
+for i in range(len(list_collect_0)-3):
+    print("C%d = %.4f" % (i, list_collect_0[i+2][index]))
+
+
+# show the lambda_to_result plot
 
 plt.figure(num=3,figsize=(8,5))
 

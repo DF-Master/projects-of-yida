@@ -32,84 +32,92 @@ Y_test = np.array([row[1] for row in test_data] )
 
 
 poly_features = PolynomialFeatures(degree=4, include_bias=False)
-train_X = np.c_[np.cos(poly_features.fit_transform(x.reshape(-1, 1))),x.reshape(-1, 1)] #reshape (-1,1)转换成一列，为np功能
+train_X = np.c_[poly_features.fit_transform(np.cos(x.reshape(-1, 1))),x.reshape(-1, 1)] #reshape (-1,1)转换成一列，为np功能
 
-test_X = np.c_[np.cos(poly_features.fit_transform(X_test.reshape(-1, 1))),X_test.reshape(-1, 1)]#reshape (-1,1)转换成一列，为np功能
+test_X = np.c_[poly_features.fit_transform(np.cos(X_test.reshape(-1, 1))),X_test.reshape(-1, 1)]#reshape (-1,1)转换成一列，为np功能
 print(x.reshape(-1, 1))
-
 print(train_X)
 
 # create list to save data
 lambda_to_y_list = []
 list_collect_0 = []
 
-# for lam in range(20):
+for lam in np.logspace(-6, 6, 100):
     
-# Train Data
-# ==============================================
-# ==============================================
+    # Train Data
+    # ==============================================
+    # ==============================================
 
-lambda_ = 0 # Regularization factor
-train_model = linear_model.Ridge(alpha=lambda_, fit_intercept=True) # Create a ridge regression model
-train_model.fit(train_X, y) # Training
+    lambda_ = lam # Regularization factor
+    train_model = linear_model.Ridge(alpha=lambda_, fit_intercept=True) # Create a ridge regression model
+    train_model.fit(train_X, y) # Training
 
-# Get model coefficients
-# C[0] - intercept (constant term)
-# C[1], C[2], C[3], C[4] - unpack model coefficients
-# C[5] - x
+    # Get model coefficients
+    # C[0] - intercept (constant term)
+    # C[1], C[2], C[3], C[4] - unpack model coefficients
+    # C[5] - x
 
-C = [train_model.intercept_, *train_model.coef_]
+    C = [train_model.intercept_, *train_model.coef_]
+    # print("="*20, "# Model Parameters", "="*20, sep='\n')
+    # for i, v in enumerate(C):
+    #     print("C%d = %.4f" % (i, v))
+        
+    pred_Y = train_model.predict(train_X) # Predicting
+    # with squared=False, mean_squared_error calculates RMSE
+    # Otherwise, mean_squared_error calculates RME
+    train_rmse = mean_squared_error(y, pred_Y, squared=False)
+
+    # print("="*20, "# Predict", "="*20, sep='\n')
+    # print("Train RMSE = %.3f" % train_rmse,'\n',"Lambda = %.2f" % lambda_)
+    lambda_to_y_list = []
+    lambda_to_y_list.append(lambda_)
+    lambda_to_y_list.append(float(f'{train_rmse:>.3f}'))
+    lambda_to_y_list += C
+
+    # Test Data
+    # ==============================================
+    # ==============================================
+
+    pred_Y_test = train_model.predict(test_X) # Predicting
+    # with squared=False, mean_squared_error calculates RMSE
+    # Otherwise, mean_squared_error calculates RME
+    test_rmse = mean_squared_error(Y_test, pred_Y_test, squared=False)
+    # print("Test RMSE = %.3f" % test_rmse,'\n',"Lambda = %.2f" % lambda_)
+    lambda_to_y_list.append(float(f'{test_rmse:>.3f}'))
+
+    list_collect_0.append(lambda_to_y_list)
+
+
+# show the min test_rmse data
+list_collect_0 = list(map(list,zip(*list_collect_0)))
+
+index = list_collect_0[-1].index(min(list_collect_0[-1]))
+print(list_collect_0[-1])
+print("="*20, "# Predict_MIN_Test_RMSE", "="*20, sep='\n')
+print("Train RMSE = %.3f" % list_collect_0[1][index],'\n',"Lambda = %.2f" % list_collect_0[0][index],'\n',"Test RMSE = %.3f" % list_collect_0[-1][index])
 print("="*20, "# Model Parameters", "="*20, sep='\n')
-for i, v in enumerate(C):
-    print("C%d = %.4f" % (i, v))
+for i in range(len(list_collect_0)-3):
+    print("C%d = %.4f" % (i, list_collect_0[i+2][index]))
     
-pred_Y = train_model.predict(train_X) # Predicting
-# with squared=False, mean_squared_error calculates RMSE
-# Otherwise, mean_squared_error calculates RME
-train_rmse = mean_squared_error(y, pred_Y, squared=False)
+# show the lambda_to_result plot
 
-print("="*20, "# Predict", "="*20, sep='\n')
-print("Train RMSE = %.3f" % train_rmse,'\n',"Lambda = %.2f" % lambda_)
-lambda_to_y_list = []
-lambda_to_y_list.append(lambda_)
-lambda_to_y_list.append(float(f'{train_rmse:>.3f}'))
-lambda_to_y_list += C
+plt.figure(num=3,figsize=(8,5))
 
-# Test Data
-# ==============================================
-# ==============================================
-
-pred_Y_test = train_model.predict(test_X) # Predicting
-# with squared=False, mean_squared_error calculates RMSE
-# Otherwise, mean_squared_error calculates RME
-test_rmse = mean_squared_error(Y_test, pred_Y_test, squared=False)
-print("Test RMSE = %.3f" % test_rmse,'\n',"Lambda = %.2f" % lambda_)
-lambda_to_y_list.append(float(f'{test_rmse:>.3f}'))
-
-list_collect_0.append(lambda_to_y_list)
-
-
-    
-# # show the lambda_to_result plot
-# list_collect_0 = list(map(list,zip(*list_collect_0)))
-
-# plt.figure(num=3,figsize=(8,5))
-
-# plt.plot(np.log(list_collect_0[0]),list_collect_0[1],label = "RMSE_TRAIN")
-# plt.plot(np.log(list_collect_0[0]),list_collect_0[-1],label = "RMSE_TEST")
+plt.plot(np.log(list_collect_0[0]),list_collect_0[1],label = "RMSE_TRAIN")
+plt.plot(np.log(list_collect_0[0]),list_collect_0[-1],label = "RMSE_TEST")
 
 
 
-# for i in range(len(list_collect_0)-3): 
-#     plt.plot(np.log(list_collect_0[0]),list_collect_0[i+2],label='C'+str(i))
+for i in range(len(list_collect_0)-3): 
+    plt.plot(np.log(list_collect_0[0]),list_collect_0[i+2],label='C'+str(i))
 
 
-# plt.xlabel('ln(lambda)')
-# plt.title("Regression Result")
+plt.xlabel('ln(lambda)')
+plt.title("Regression Result")
 
 
-# # plt.ylim(-0.5,10)
-# plt.legend()
-# plt.grid(ls='--')#添加网格
+# plt.ylim(-0.5,10)
+plt.legend()
+plt.grid(ls='--')#添加网格
 
-# plt.show()
+plt.show()
