@@ -10,6 +10,7 @@ from torch.utils.data import random_split
 from torch import nn
 import torch.nn.functional as F
 from torch.optim import Adam
+import numpy as np
 
 # Download MNIST dataset (or load the directly if you have already downloaded them previously)
 if os.path.exists("./AI/AI_in_chem/homework3/data/MNIST"):
@@ -132,4 +133,70 @@ class CNNModel(nn.Module):
 model_cnn = CNNModel(conv1c, conv2c, conv1k, conv2k, fc1, fc2, batchnorm,
                      dropout)
 
+
 # Model training and evaluation
+@torch.no_grad()
+def evaluation(model, evalloader):
+    conf_mat = np.zeros((10, 10))
+    model.eval()
+    misclassified = []
+    predicts = []
+    numT = 0
+    numF = 0
+    for i, x in enumerate(evalloader):
+        image, label = x
+        pred = torch.argmax(model(image), dim=1)
+        _T = torch.sum(pred == label).item()
+        numT += _T
+        numF += len(label) - _T
+        for j in range(len(label)):
+            conf_mat[label[j], pred[j]] += 1
+            if label[j] != pred[j]:
+                misclassified.append((image[j], label[j], pred[j]))
+            predicts.append(pred[j])
+
+    model.train()
+    return numT / (numT + numF), conf_mat, misclassified, predicts
+
+
+def fit(model, trainloader, valloader, lr, weight_decay, max_epoch=10):
+    train_batch_losses = []
+    val_acc = []
+
+    loss_fn = nn.NLLLoss(reduction="mean")
+    optimizer = Adam(model.parameters(), lr=lr,
+                     weight_decay=weight_decay)  # Using Adam optimizer
+    batches_per_epoch = len(trainloader)
+
+    for epoch in range(max_epoch):
+        epoch_loss = 0
+        for i, x in enumerate(trainloader):
+            optimizer.zero_grad()
+            image, label = x
+            pred = model(image)
+            loss = loss_fn(pred, label)
+            loss.backward()
+            optimizer.step()
+            epoch_loss += loss.item()
+            train_batch_losses.append(
+                (epoch * batches_per_epoch + i, loss.item()))
+
+            if (i % 200 == 0):
+                print("Epoch %d, Batch %d loss: %f" % (epoch, i, loss.item()))
+                acc, _cm, _mis, _pred = evaluation(model, valloader)
+                val_acc.append((epoch * batches_per_epoch + i, acc))
+                print("   Accuracy after epoch %d batch %d: %f" %
+                      (epoch, i, acc))
+        print("\n##### Epoch %d average loss: " % epoch,
+              epoch_loss / batches_per_epoch, ' #####\n')
+    return train_batch_losses, val_acc
+
+
+print("Training CNN Model.")
+model_cnn.train()
+train_losses_cnn, val_acc_cnn = fit(model_cnn,
+                                    trainloader,
+                                    valloader,
+                                    lr=lr,
+                                    weight_decay=weight_decay,
+                                    max_epoch=3)
