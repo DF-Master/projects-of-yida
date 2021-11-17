@@ -1,4 +1,5 @@
 import torch
+from torch.nn.modules import module
 import torchvision
 from torch.autograd import Variable
 from torchvision import datasets, transforms
@@ -11,6 +12,8 @@ from torch import nn
 import torch.nn.functional as F
 from torch.optim import Adam
 import numpy as np
+import pandas as pd
+import csv
 
 # Download MNIST dataset (or load the directly if you have already downloaded them previously)
 if os.path.exists("./AI/AI_in_chem/homework3/data/MNIST"):
@@ -35,61 +38,6 @@ testset = torchvision.datasets.MNIST('./AI/AI_in_chem/homework3/data',
 samples = []
 print("trainset size: ", len(trainset_all))
 print("testset size: ", len(testset))
-
-# show information of the first 10 samples in the training dataset
-# for i, x in enumerate(trainset_all):
-#     if len(samples) >= 20:
-#         break
-#     print("Shape (Channel, X, Y): ", x[0].shape, "    Label: ", x[1])
-#     samples.append((x[0].squeeze(), x[1]))
-
-# Visualizing the first 20 samples
-# plt.figure(figsize=(10, 3))
-# for i in range(20):
-#     plt.subplot(2, 10, i + 1)
-#     plt.imshow(samples[i][0], cmap='gray', interpolation='none')
-#     plt.title("Label: " + str(samples[i][1]))
-#     plt.axis('off')
-# plt.show()
-
-# Train-Validation-Test split
-SEED = 114514
-valid_size = 10000
-train_size = len(trainset_all) - valid_size
-trainset, valset = random_split(trainset_all, [train_size, valid_size],
-                                generator=torch.Generator().manual_seed(SEED))
-
-print("Trainset size: ", len(trainset))
-print("Validation set size: ", len(valset))
-
-# hyperparameters
-batch_size = 32
-
-# for CNN model (conv2d x2 + fc x2)
-conv1c = 16
-conv2c = 32
-conv1k = 5
-conv2k = 3
-fc1 = 128
-fc2 = 10
-batchnorm = True
-dropout = 0.1
-
-# for training
-lr = 0.001
-weight_decay = 1e-5
-
-# Build DataLoader Object
-trainloader = DataLoader(trainset, batch_size, shuffle=True, drop_last=True)
-valloader = DataLoader(valset, batch_size, shuffle=True, drop_last=True)
-testloader = DataLoader(testset, batch_size, shuffle=True, drop_last=True)
-
-# Image Visualizing Using CV2
-# images, lables = next(iter(trainloader))
-# img = torchvision.utils.make_grid(images, nrow=10)
-# img = img.numpy().transpose(1, 2, 0)
-# cv2.imshow('img', img)
-# cv2.waitKey(0)
 
 
 class CNNModel(nn.Module):
@@ -130,10 +78,6 @@ class CNNModel(nn.Module):
         return out
 
 
-model_cnn = CNNModel(conv1c, conv2c, conv1k, conv2k, fc1, fc2, batchnorm,
-                     dropout)
-
-
 # Model training and evaluation
 @torch.no_grad()
 def evaluation(model, evalloader):
@@ -153,7 +97,7 @@ def evaluation(model, evalloader):
             conf_mat[label[j], pred[j]] += 1
             if label[j] != pred[j]:
                 misclassified.append((image[j], label[j], pred[j]))
-            predicts.append(pred[j])
+            predicts.append([int(label[j]), int(pred[j])])
 
     model.train()
     return numT / (numT + numF), conf_mat, misclassified, predicts
@@ -192,11 +136,163 @@ def fit(model, trainloader, valloader, lr, weight_decay, max_epoch=10):
     return train_batch_losses, val_acc
 
 
-print("Training CNN Model.")
-model_cnn.train()
-train_losses_cnn, val_acc_cnn = fit(model_cnn,
-                                    trainloader,
-                                    valloader,
-                                    lr=lr,
-                                    weight_decay=weight_decay,
-                                    max_epoch=3)
+def Model_Evaluation(model):
+    CNN_val_acc, CNN_val_cm, CNN_val_mis, CNN_val_pred = evaluation(
+        model, valloader)
+    CNN_val_cm = pd.DataFrame(CNN_val_cm, dtype=int)
+    print("CNN Validation Accuracy: ", CNN_val_acc)
+    print("CNN Validation Confusion Matrix: \n", CNN_val_cm)
+    return CNN_val_acc, CNN_val_cm, CNN_val_mis, CNN_val_pred
+
+
+if __name__ == '__main__':
+    # Train-Validation-Test split
+    SEED = 114514
+    valid_size = 10000
+    train_size = len(trainset_all) - valid_size
+    trainset, valset = random_split(
+        trainset_all, [train_size, valid_size],
+        generator=torch.Generator().manual_seed(SEED))
+
+    print("Trainset size: ", len(trainset))
+    print("Validation set size: ", len(valset))
+
+    # hyperparameters
+    batch_size = 32
+
+    # for CNN model (conv2d x2 + fc x2)
+    conv1c = 16
+    conv2c = 32
+    conv1k = 5
+    conv2k = 3
+    fc1 = 128
+    fc2 = 10
+    batchnorm = True
+    dropout = 0.1
+
+    # for training
+    lr = 0.001
+    weight_decay = 1e-5
+    max_epoch = 3
+
+    # Build DataLoader Object
+    trainloader = DataLoader(trainset,
+                             batch_size,
+                             shuffle=True,
+                             drop_last=True)
+    valloader = DataLoader(valset, batch_size, shuffle=True, drop_last=True)
+    testloader = DataLoader(testset, batch_size, shuffle=True, drop_last=True)
+
+    # Train Model
+    ## Save header of constant
+    # with open("./AI/AI_in_chem/homework3/data_modify.csv", "w") as csv_file:
+    #     writer = csv.writer(csv_file)
+    #     writer.writerow([
+    #         "conv1c", "conv2c", "conv1k", "conv2k", "fc1", "fc2", "batchnorm",
+    #         "dropout", "lr", "weight_decay", "max_epoch", "Accuracy", "Loss"
+    #     ])
+
+    print("Training CNN Model.")
+
+    model_cnn = CNNModel(conv1c, conv2c, conv1k, conv2k, fc1, fc2, batchnorm,
+                         dropout)
+
+    model_cnn.train()
+    train_losses_cnn, val_acc_cnn = fit(model_cnn,
+                                        trainloader,
+                                        valloader,
+                                        lr=lr,
+                                        weight_decay=weight_decay,
+                                        max_epoch=max_epoch)
+    CNN_val_acc_save, CNN_val_cm_save, CNN_val_mis_save, CNN_val_pred_save = Model_Evaluation(
+        model_cnn)
+
+    print("*** Use Model on Test Data ***")
+    acc_test, conf_mat_test, misclassified_test, predicts_test = evaluation(
+        model_cnn, testloader)
+    print("Accuracy: " + str(acc_test))
+    print("Misclassified_test\n", pd.DataFrame(conf_mat_test, dtype=int))
+    print(predicts_test)
+    with open("./AI/AI_in_chem/homework3/mnist_test_prediction.csv",
+              "w") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerows(predicts_test)
+
+    # Save Models
+    os.makedirs("./AI/AI_in_chem/homework3/checkpoints", exist_ok=True)
+    # save parameters only
+    torch.save(model_cnn.state_dict(),
+               "./AI/AI_in_chem/homework3/checkpoints/model_cnn.pt")
+
+# Save Constant
+# with open("./AI/AI_in_chem/homework3/data_modify.csv",
+#             "a") as csv_file:
+#     writer = csv.writer(csv_file)
+#     writer.writerow([
+#         float(i) for i in [
+#             conv1c, conv2c, conv1k, conv2k, fc1, fc2,
+#             batchnorm, dropout, lr, weight_decay,
+#             max_epoch, CNN_val_acc_save,
+#             train_losses_cnn[-1][-1]
+#         ]
+#     ])
+
+# input
+path = "./AI\AI_in_chem\homework3\handwritten"
+images_path = os.listdir(path)
+images = []
+
+for i in images_path:
+    label = int(i.split('_')[1].split('.')[0])
+    image = torchvision.io.read_image(os.path.join(path, i)).float()[0:3, :, :]
+    image = image.mean(dim=0).unsqueeze(0)
+    images.append((image, label))
+
+_values = torch.concat([i for i, j in images]).reshape(-1)
+_mean = _values.mean().item()
+_sd = _values.std().item()
+print("Mean: ", _mean, "  Std:", _sd)
+mytransform = torchvision.transforms.Normalize((_mean), (_sd))
+# mytransform = torchvision.transforms.Normalize((0.1307,), (0.3081,))
+
+for i in range(len(images)):
+    img = mytransform(images[i][0])
+    images[i] = (img, images[i][1])
+
+from torch.utils.data import Dataset
+
+
+class mySet(Dataset):
+    def __init__(self, images):
+        super(mySet, self).__init__()
+        self.data = images
+
+    def __getitem__(self, x):
+        return self.data[x]
+
+    def __len__(self):
+        return len(self.data)
+
+
+myevalset = mySet(images)
+print("My dataset size: ", len(myevalset))
+
+myloader = DataLoader(mySet(images),
+                      shuffle=False,
+                      drop_last=False,
+                      batch_size=batch_size)
+myacc, mycm, mymis, mypred = evaluation(model_cnn, myloader)
+
+print("Accuracy on custom dataset: ", myacc)
+
+print("Visualizing custom samples")
+plt.figure()
+for i in range(len(myevalset)):
+    img, label = myevalset[i]
+    pred = mypred[i][-1]
+    img = img.squeeze()
+    plt.subplot(2, 5, i + 1)
+    plt.imshow(img, cmap='gray', interpolation='none')
+    plt.title("Label: " + str(label) + "\nPredict: " + str(pred))
+    plt.axis('off')
+plt.show()
