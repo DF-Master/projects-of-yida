@@ -7,6 +7,9 @@ import cv2
 import os
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
+from torch import nn
+import torch.nn.functional as F
+from torch.optim import Adam
 
 # Download MNIST dataset (or load the directly if you have already downloaded them previously)
 if os.path.exists("./AI/AI_in_chem/homework3/data/MNIST"):
@@ -74,3 +77,59 @@ dropout = 0.1
 # for training
 lr = 0.001
 weight_decay = 1e-5
+
+# Build DataLoader Object
+trainloader = DataLoader(trainset, batch_size, shuffle=True, drop_last=True)
+valloader = DataLoader(valset, batch_size, shuffle=True, drop_last=True)
+testloader = DataLoader(testset, batch_size, shuffle=True, drop_last=True)
+
+# Image Visualizing Using CV2
+# images, lables = next(iter(trainloader))
+# img = torchvision.utils.make_grid(images, nrow=10)
+# img = img.numpy().transpose(1, 2, 0)
+# cv2.imshow('img', img)
+# cv2.waitKey(0)
+
+
+class CNNModel(nn.Module):
+    def __init__(self, conv1c, conv2c, conv1k, conv2k, fc1, fc2, batchnorm,
+                 dropout):
+        super(CNNModel, self).__init__()
+
+        self.conv1 = nn.Conv2d(1, conv1c, kernel_size=(conv1k, conv1k))
+        self.conv2 = nn.Conv2d(conv1c, conv2c, kernel_size=(conv2k, conv2k))
+
+        self.pool = nn.MaxPool2d(kernel_size=2)
+        self.dropout = nn.Dropout(p=dropout)
+
+        self.batchnorm = batchnorm
+        if batchnorm:
+            self.bn1 = nn.BatchNorm2d(conv1c)
+            self.bn2 = nn.BatchNorm2d(conv2c)
+
+        final_size = ((28 - conv1k + 1) // 2 - conv2k + 1) // 2
+        self.fc1 = nn.Linear(conv2c * final_size * final_size, fc1)
+        self.fc2 = nn.Linear(fc1, fc2)
+
+    def forward(self, x):
+        # x: [batch_size, 1, 28, 28], assume conv1k=5 and conv2k=3
+        out = self.conv1(x)  # [batch_size, conv1c, 24, 24]
+        out = F.relu(self.pool(out))  # [batch_size, conv1c, 12, 12]
+        if self.batchnorm:
+            out = self.bn1(out)  # [batch_size, conv1c, 12, 12]
+        out = self.conv2(out)  # [batch_size, conv2c, 10, 10]
+        out = F.relu(self.pool(out))  # [batch_size, conv2c, 5, 5]
+
+        if self.batchnorm:
+            out = self.bn2(out)  # [batch_size, conv2c, 5, 5]
+        out = out.reshape(out.shape[0], -1)  # [batch_size, conv2c*25]
+        out = F.relu(self.fc1(out))  # [batch_size, fc1]
+        out = self.dropout(out)
+        out = F.log_softmax(self.fc2(out), dim=1)  # [batch_size, fc2]
+        return out
+
+
+model_cnn = CNNModel(conv1c, conv2c, conv1k, conv2k, fc1, fc2, batchnorm,
+                     dropout)
+
+# Model training and evaluation
