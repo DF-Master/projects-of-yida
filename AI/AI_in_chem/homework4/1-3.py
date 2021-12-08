@@ -1,4 +1,3 @@
-# Ref: https://moonbooks.org/Articles/How-to-create-a-scatter-plot-with-several-colors-in-matplotlib-/
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import cluster, datasets, manifold, metrics, random_projection
@@ -22,9 +21,9 @@ _data_std = StandardScaler().fit_transform(digits['data'])
 ### By default, sklearn will avoid "divided by zero" and return zeros instead of "nan"
 
 # PCA to 2D
-pca = PCA(n_components=20)
+pca = PCA()
 x_pca_2 = pca.fit_transform(digits['data'])[:, 0:2]
-print(x_pca_2.shape)
+print("x_pca_2 Shape:", x_pca_2.shape)
 
 # tSNE to 2D
 tsne = manifold.TSNE(n_components=2)
@@ -33,23 +32,30 @@ print(x_tsne_2.shape)
 
 
 # Visualization (using pyplot)
-def vistualization(target, name=''):
+def vistualization(target, c=digits['target'], name=''):
     category_colors = plt.get_cmap('tab10')(np.linspace(0., 1., 10))
 
     plt.figure(figsize=(6, 6), dpi=120)
     plt.xlabel('PC1')
     plt.xlabel('PC2')
-    plt.title("1-2 " + name + "Result")
+    plt.title("1-3 " + name + "Result")
 
-    scatter = plt.scatter(target[:, 0],
-                          target[:, 1],
-                          c=digits['target'],
-                          cmap='tab10')
+    scatter = plt.scatter(target[:, 0], target[:, 1], c=c, cmap='tab10')
     plt.legend(*scatter.legend_elements(), loc="best", title="Classes")
-    plt.savefig(".\\AI\\AI_in_chem\\homework4\\1-2-" + name + ".png")
+    plt.savefig(".\\AI\\AI_in_chem\\homework4\\1-3-" + name + ".png")
 
     plt.close('All')
 
 
+# KMeans clustering (No Dim Red)
+kmeans_before = cluster.KMeans(n_clusters=10,
+                               random_state=0).fit(digits['data'])
+kmeans_after_pca = cluster.KMeans(n_clusters=10, random_state=0).fit(x_pca_2)
+kmeans_after_tsne = cluster.KMeans(n_clusters=10, random_state=0).fit(x_tsne_2)
+
 vistualization(x_pca_2, name="PCA")
+vistualization(x_pca_2, c=kmeans_before.labels_, name="KMEANS-before-PCA")
+vistualization(x_pca_2, c=kmeans_after_pca.labels_, name="KMEANS-after-PCA")
 vistualization(x_tsne_2, name="TSNE")
+vistualization(x_tsne_2, c=kmeans_before.labels_, name="KMEANS-before-TSNE")
+vistualization(x_tsne_2, c=kmeans_after_tsne.labels_, name="KMEANS-after-TSNE")
