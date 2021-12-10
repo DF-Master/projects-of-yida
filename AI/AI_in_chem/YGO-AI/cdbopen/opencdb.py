@@ -3,9 +3,11 @@ import pydeck
 # Connenct cards.cdb
 con = pydeck.loadDatabase('AI/AI_in_chem/YGO-AI/cdbopen/cards_cn.cdb')
 
+
 # Find Card ID
-card_name = pydeck.getCardsFromName('连接栗子球')
-print('Card ID is: ', card_name)
+def find(name):
+    card_name = pydeck.getCardsFromName(name)
+    print('Card ID is: ', card_name)
 
 
 #
@@ -57,4 +59,4 @@ def Search_all(CardID):
 
 
 if __name__ == '__main__':
-    Search_all(41999284)
+    Search_all('79868386')
