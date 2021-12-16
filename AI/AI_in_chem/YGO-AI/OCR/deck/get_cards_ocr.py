@@ -46,7 +46,8 @@ with open('./AI/AI_in_chem/YGO-AI/OCR/deck/all_cards.txt', 'r') as deck:
                             for blur_y in [1, 3]:
                                 with open(
                                         './AI/AI_in_chem/YGO-AI/OCR/deck/ocr_data.csv',
-                                        "a") as file:
+                                        "a",
+                                        encoding="utf-8") as file:
                                     writer = csv.writer(file)
                                     ocr_cards(card_name,
                                               writer,
