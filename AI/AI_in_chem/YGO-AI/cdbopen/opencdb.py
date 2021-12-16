@@ -59,4 +59,5 @@ def Search_all(CardID):
 
 
 if __name__ == '__main__':
+    find('天霆号 阿宙斯')
     Search_all('79868386')
