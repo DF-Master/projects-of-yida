@@ -59,9 +59,9 @@ def vistualization(target, c=zinc_fp, name=''):
 
     plt.close('All')
     print("silhouette_score After" + name,
-          silhouette_score(x_pca_2, kmeans_after_tsne.labels_))
+          silhouette_score(x_tsne_2, kmeans_after_tsne.labels_))
     print('Center Position: ', "\n", kmeans_after_tsne.cluster_centers_)
-    print("Labels: ", kmeans_after_tsne.labels_)
+    print("Labels: ", kmeans_after_tsne.labels_[0:100])
 
 
 tsne(metric=cosine_similarity, dim=2)
