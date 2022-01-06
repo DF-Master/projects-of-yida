@@ -6,12 +6,15 @@ import csv
 
 
 def ocr_cards(card_name, target, blur_x=3, blur_y=3, blur_sigma=0):
+    # Just Modify here
     try:
         img = Image.open('./AI/AI_in_chem/YGO-AI/OCR/deck/deck_kaiba/' +
                          card_name + ".jpg").resize((59 * 3, 86 * 3))
     except:
         img = Image.open('./AI/AI_in_chem/YGO-AI/OCR/deck/deck_yogi/' +
                          card_name + ".jpg").resize((59 * 3, 86 * 3))
+
+    # end
 
     img = cv2.GaussianBlur(np.array(img), (blur_x, blur_y), blur_sigma)
     reader = easyocr.Reader(['ch_sim', 'en'])

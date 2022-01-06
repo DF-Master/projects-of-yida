@@ -1,14 +1,10 @@
-## You need to install pydeck from github first
+from google_images_download import google_images_download
 import pydeck
 
 # Connenct cards.cdb
-con = pydeck.loadDatabase('AI/AI_in_chem/YGO-AI/cdbopen/cards_cn.cdb')
-
-
-# Find Card ID
-def find(name):
-    card_name = pydeck.getCardsFromName(name)
-    print('Card ID is: ', card_name)
+con = pydeck.loadDatabase(
+    'C:/Users/jiang/Documents/GitHub/projects-of-yida/AI/AI_in_chem/YGO-AI/cdbopen/cards_en.cdb'
+)
 
 
 #
@@ -16,6 +12,7 @@ def Search_all(CardID):
     # Get Text with ID
     get_text = pydeck.getText(CardID, 'name')
     print('Card Text is:', get_text)
+    card_name = get_text
 
     get_text = pydeck.getText(CardID, 'desc')
     print('Card Function is:', get_text)
@@ -58,6 +55,36 @@ def Search_all(CardID):
     get_text = pydeck.getData(CardID, 'category')
     print('Card Category is:', get_text)
 
+    return card_name
 
-if __name__ == '__main__':
-    Search_all('63767246')
+
+def Crawl_image(card_name):
+    response = google_images_download.googleimagesdownload()
+
+    arguments = {
+        "keywords": card_name,
+        "limit": 99,
+        "print_urls": True,
+        "output_directory": "H:/chrome-download/google_images_download"
+    }  #creating list of arguments
+
+    absolute_image_paths = response.download(
+        arguments)  #passing the arguments to the function
+    print(absolute_image_paths
+          )  #printing absolute paths of the downloaded images
+
+
+with open(
+        'C:/Users/jiang/Documents/GitHub/projects-of-yida/AI/AI_in_chem/YGO-AI/OCR/deck/all_cards.txt'
+) as f:
+    all_name = []
+    for card_id in f:
+        if card_id in all_name:
+            continue
+        else:
+            all_name.append(card_id)
+            card_name = str(Search_all(card_id))
+            try:
+                Crawl_image(card_name)
+            except:
+                Crawl_image("".join(card_name.split(":")))
