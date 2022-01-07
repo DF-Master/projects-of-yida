@@ -11,6 +11,8 @@ from torch import nn
 import torch.nn.functional as F
 import cv2
 
+# Pytorch Acc
+
 # 模型参数
 # hyperparameters
 batch_size = 32
@@ -43,11 +45,6 @@ dropout = 0.1
 # for training
 lr = 0.001
 weight_decay = 1e-5
-
-# input dir
-inputpath = ''
-
-# Input Img
 
 
 class CNN(nn.Module):
@@ -219,3 +216,55 @@ class CNN(nn.Module):
         epoch = checkpoint['epoch']
         loss = checkpoint['loss']
         return epoch, loss
+
+
+class mySet(Dataset):
+    def __init__(self, images):
+        super(mySet, self).__init__()
+        self.data = images
+
+    def __getitem__(self, x):
+        return self.data[x]
+
+    def __len__(self):
+        return len(self.data)
+
+
+# input dir
+inputpath = './AI\AI_in_chem\YGO-AI\CNN\CNN_img/'
+images_list = []
+
+# Input Img
+for file_root_path, fold, img_name_list in os.walk(inputpath):
+    for img_name in img_name_list:
+        img = cv2.imread(inputpath + img_name)
+        img = np.moveaxis(img, -1, 0) / 255
+        images_list.append((img, int(img_name.split('_')[-1].split('.')[0])))
+
+images_set = mySet(images_list)
+
+valid_size = round(len(images_set) / 8)
+train_size = len(images_set) - valid_size
+
+trainset, valset = random_split(images_set, [train_size, valid_size],
+                                generator=torch.Generator())
+trainloader = DataLoader(trainset,
+                         batch_size,
+                         shuffle=True,
+                         num_workers=8,
+                         drop_last=True)
+valloader = DataLoader(valset,
+                       batch_size,
+                       shuffle=False,
+                       num_workers=8,
+                       drop_last=False)
+print('Trainset size: ', len(trainset))
+print('Validation set size: ', len(valset))
+
+model_cnn = CNN(True, 0.1)
+model_cnn.train()
+
+if __name__ == '__main__':
+
+    train_losses_cnn, val_acc_cnn = model_cnn.fit(trainloader, valloader,
+                                                  0.001, 1e-5, 8)
