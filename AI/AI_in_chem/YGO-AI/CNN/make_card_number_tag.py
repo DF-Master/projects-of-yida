@@ -13,5 +13,6 @@ for filepath in [
             img = cv2.imread(filepath + img_name)
             i += 1
 
-            cv2.imwrite('AI\AI_in_chem\YGO-AI\CNN/CNN-img/' + str(i) + ".jpg",
-                        img)
+            cv2.imwrite(
+                'AI\AI_in_chem\YGO-AI\CNN/CNN-img-number-source/' + str(i) +
+                ".jpg", img)
