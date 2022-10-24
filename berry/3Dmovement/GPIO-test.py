@@ -23,7 +23,7 @@ def Transform_list(l):
     return list(map(list, zip(*l)))
 
 
-def forward(channel, delay=0.01, steps=50):  #A-B-C-D-A通电方式
+def forward(channel, delay=0.1, steps=50):  #A-B-C-D-A通电方式
     GPIO.setup(channel, GPIO.OUT, initial=1)
     for i in range(0, steps):
         GPIO.output(channel, 1)
@@ -38,15 +38,24 @@ if __name__ == '__main__':
     GPIO.setmode(GPIO.BCM)
     #Initial
     GPIO.setup(2, GPIO.IN)
+    GPIO.setup(3, GPIO.OUT)
+    GPIO.setup(4, GPIO.OUT,initial=1)
+
     # Run
-    while True:
-        if GPIO.input(2) == GPIO.LOW:
-            GPIO.cleanup(3)
-            GPIO.cleanup(4)
-            time.sleep(0.5)
-        else:
-            GPIO.setup(4, GPIO.OUT, initial=1)
-            forward(3)
+    forward(3,delay=0.02, steps=100)
+
+
+
+    GPIO.setup(4, GPIO.OUT,initial=0)
+
+    # while True:
+    #     if GPIO.input(2) == GPIO.LOW:
+    #         GPIO.cleanup(3)
+    #         GPIO.cleanup(4)
+    #         time.sleep(0.5)
+    #     else:
+    #         GPIO.setup(4, GPIO.OUT, initial=1)
+    #         forward(3)
 
     # time.sleep(0.2)
     # print(GPIO.input(26))
