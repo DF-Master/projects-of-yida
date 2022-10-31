@@ -150,7 +150,7 @@ if __name__ == '__main__':
     channel_1=Communication()
     channel_1.Print_Name() 
     channel_1.Check()
-    channel_1.Send_data(b"$3100016")
+    # channel_1.Send_data(b"$3100016")
 
     channel_1.Send_data(Power_Switch(ini_inensity=0))
     
