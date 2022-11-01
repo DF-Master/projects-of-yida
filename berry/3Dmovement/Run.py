@@ -18,25 +18,23 @@ if __name__ == '__main__':
     # channel_1.Send_data(UVcontrol.Power_Switch(ini_inensity=0))
 
     st.title("UVControl-WebUI")
-    st.markdown('made by [Yida](https://github.com/DF-Master) --221031 update!',unsafe_allow_html=True)
+    st.caption('made by [Yida](https://github.com/DF-Master) --221101 update!',unsafe_allow_html=True)
     # comdefault = str(comset)
-
-
-
+    output= st.empty()
 
     if st.button('Initial'):
         try:
             GPIO.Initial()
-            st.markdown('~~~ Initial Finished ~~~')
+            output.markdown(' Initial Finished ')
         except:
-            st.markdown('~~~ Initial failed ~~~')
+            output.markdown(' Initial failed ')
     
     if st.button('Reset'):
         try:
             GPIO.Reset(3)
-            st.markdown('~~~ Reset Finished ~~~')
+            output.markdown(' Reset Finished ')
         except:
-            st.markdown('~~~ Reset failed ~~~')
+            output.markdown(' Reset failed ')
 
     step_set = st.text_input('StepSet',value='1600')
     dir_set=st.text_input('StepSet(0/1)',value='0')
@@ -44,25 +42,26 @@ if __name__ == '__main__':
     if st.button('Forward'):
         try:
             GPIO.Forward(3,dir=int(dir_set),steps=int(step_set))
-            st.markdown('~~~ Forward Finished ~~~')
+            output.markdown(' Forward Finished ')
         except:
-            st.markdown('~~~ Forward failed ~~~')
+            output.markdown(' Forward failed ')
 
     uv_intensity_set = st.text_input('UVIntensitySet(0-255)',value='0')
 
     if st.button('UVAdjust'):
         try:
             UVcontrol.Communication().Send_data(UVcontrol.Power_Switch(ini_inensity=int(uv_intensity_set)))
-            st.markdown('~~~ Forward Finished ~~~')
+            output.markdown(' Forward Finished ')
         except:
-            st.markdown('~~~ Forward failed ~~~')
+            output.markdown(' Forward failed ')
     
     command_order= st.text_input('Command(dir,steps,uv,wait;)',value='1,800,100,1;0,800,0,1')
 
 
     if st.button('AutoRun'):
-
         try:
+            n=0
+            
             command_order_list=command_order.split(";")
             print(command_order_list)
             for i in command_order_list:
@@ -71,11 +70,15 @@ if __name__ == '__main__':
                 GPIO.Forward(3,dir=int(order_list[0]),steps=int(order_list[1]))
                 UVcontrol.Communication().Send_data(UVcontrol.Power_Switch(ini_inensity=int(order_list[2])))
                 time.sleep(int(order_list[3]))
-                print('NEXT')
-            st.markdown('~~~ AutoRun Finished ~~~')
+                n+=1
+                print('Finish Round: ',n)
+                
+                output.markdown('Finish Round: '+str(n))
+            output.markdown(' AutoRun Finished ')
         except:
-            st.markdown('~~~ AutoRun failed ~~~')
+            output.markdown(' AutoRun failed ')
 
+    
     # if st.button('Close'):
     #     try:
     #         initSerial(comdefault)
