@@ -2,25 +2,17 @@ import GPIO
 import UVcontrol
 import streamlit as st
 import time
-
+import PumpControl
 
 if __name__ == '__main__':
-    # Initial
-    # GPIO.Initial()
-    # UVcontrol.Communication.Print_Used_Com()
-    # channel_1=UVcontrol.Communication()
-    # channel_1.Print_Name() 
-    # channel_1.Check()
 
 
-    # channel_1.Send_data(UVcontrol.Power_Switch(ini_inensity=10))
-    # GPIO.Reset(3)
-    # channel_1.Send_data(UVcontrol.Power_Switch(ini_inensity=0))
-
-    st.title("UVControl-WebUI")
+    st.title("3D-UV-Pump-Control-WebUI")
     st.caption('made by [Yida](https://github.com/DF-Master) --221101 update!',unsafe_allow_html=True)
     # comdefault = str(comset)
     output= st.empty()
+
+    st.header("3D Movement")
 
     if st.button('Initial'):
         try:
@@ -46,14 +38,18 @@ if __name__ == '__main__':
         except:
             output.markdown(' Forward failed ')
 
+    st.header("UV Control")
+
     uv_intensity_set = st.text_input('UVIntensitySet(0-255)',value='0')
+
+    uv_com=st.text_input('UV_inputCOM',value='/dev/ttyUSB0')
 
     if st.button('UVAdjust'):
         try:
-            UVcontrol.Communication().Send_data(UVcontrol.Power_Switch(ini_inensity=int(uv_intensity_set)))
-            output.markdown(' Forward Finished ')
+            UVcontrol.Communication(com=uv_com).Send_data(UVcontrol.Power_Switch(ini_inensity=int(uv_intensity_set)))
+            output.markdown(' UVAdjust Finished ')
         except:
-            output.markdown(' Forward failed ')
+            output.markdown(' UVAdjust failed ')
     
     command_order= st.text_input('Command(dir,steps,uv,wait;)',value='1,800,100,1;0,800,0,1')
 
@@ -68,7 +64,7 @@ if __name__ == '__main__':
                 print(i)
                 order_list=i.split(",")
                 GPIO.Forward(3,dir=int(order_list[0]),steps=int(order_list[1]))
-                UVcontrol.Communication().Send_data(UVcontrol.Power_Switch(ini_inensity=int(order_list[2])))
+                UVcontrol.Communication(com=uv_com).Send_data(UVcontrol.Power_Switch(ini_inensity=int(order_list[2])))
                 time.sleep(int(order_list[3]))
                 n+=1
                 print('Finish Round: ',n)
@@ -78,6 +74,61 @@ if __name__ == '__main__':
         except:
             output.markdown(' AutoRun failed ')
 
+    st.header("Pump Control")
+
+    pump_set_status= st.empty()
+
+    pump_intensity_set = st.text_input('PumpIntensitySet(0-255)uL/min',value='10')
+
+    pump_com=st.text_input('Pump_inputCOM',value='/dev/ttyUSB0')
+
+    if st.button('Read Pump Set'):
+        try:
+            pump_channel=PumpControl.Communication(com=pump_com)
+            pump_channel.Send_data(b'\xE9\x01\x03\x43\x52\x54\x47')
+            pump_set_status.markdown(list(pump_channel.Read_Size(13)))
+            output.markdown(' Read Pump Set Finished ')
+        except:
+            output.markdown(' Read Pump Set failed ')
+
+    if st.button('Pump Intensity Set(1mL,uL/min)'):
+        try:
+            pump_channel=PumpControl.Communication(com=pump_com)
+            pump_channel.Send_data(b'\xE9\x01\x0A\x43\x57\x54\x01\x01\x00\x07'+ bytes(chr(int(pump_intensity_set)),encoding='ascii')+b'\x00\x08'+bytes(chr(68^int(pump_intensity_set)),encoding="ascii"))
+            # pump_channel.Send_data( b'\xe9\x01\nCWT\x01\x01\x00\x07\x64\x00\x08\x20')
+            
+            pump_set_status.markdown(list(pump_channel.Read_Size(5)))
+            output.markdown(' Read Pump Set Finished ')
+        except:
+            output.markdown(' Read Pump Set failed ')
+    if st.button('Pump On'):
+        try:
+            pump_channel=PumpControl.Communication(com=pump_com)
+            pump_channel.Send_data(b'\xE9\x01\x04\x43\x57\x58\x01\x48') 
+            pump_set_status.markdown(list(pump_channel.Read_Size(5)))  
+            output.markdown(' Pump On Finished ')
+        except:
+            output.markdown(' Pump On failed ')
+
+
+    if st.button('Pump Terminate'):
+        try:
+            pump_channel=PumpControl.Communication(com=pump_com)
+            pump_channel.Send_data(b'\xE9\x01\x04\x43\x57\x58\x00\x49') 
+            pump_set_status.markdown(list(pump_channel.Read_Size(5)))
+            output.markdown(' Pump On Finished ')
+        except:
+            output.markdown(' Pump On failed ')
+
+    
+    if st.button('Pump Stop'):
+        try:
+            pump_channel=PumpControl.Communication(com=pump_com)
+            pump_channel.Send_data(b'\xE9\x01\x04\x43\x57\x58\x02\x4B') 
+            pump_set_status.markdown(list(pump_channel.Read_Size(5)))
+            output.markdown(' Pump On Finished ')
+        except:
+            output.markdown(' Pump On failed ')
     
     # if st.button('Close'):
     #     try:

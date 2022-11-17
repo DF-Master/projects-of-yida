@@ -3,17 +3,13 @@ import serial.tools.list_ports
 import time
 
 
-
-# 定义默认系统变量
-
-
 # 打开串口
 
 
 class Communication():
     #初始化
 
-    def __init__(self,com= '/dev/ttyUSB0',bps=9600 ,timeout=1):
+    def __init__(self,com= '/dev/ttyUSB0',bps=9600 ,parity=serial.PARITY_EVEN,timeout=1):
         global Ret
         try:
             self.main_engine_ser=serial.Serial(port=com,baudrate=bps,timeout=timeout)
@@ -21,7 +17,7 @@ class Communication():
                 Ret = True
             self.main_engine_ser.stopbits = serial.STOPBITS_ONE
             self.main_engine_ser.bytesize = 8
-            self.main_engine_ser.parity = serial.PARITY_NONE
+            self.main_engine_ser.parity = parity
             self.main_engine_ser.rtscts = 0
             print('### InitSerial ALREADY ###') 
         except Exception as e:
@@ -47,7 +43,7 @@ class Communication():
         port_list = list(serial.tools.list_ports.comports())
         print("Available Ports:",port_list)
 
-    # 计算Ascii码的异或和校验
+    # 计算Ascii码的异或和校验-输入字符串，输出字符串
     @staticmethod
     def Cal_Xor(str_order,key="$",append_order=False,hex_swtich=False):
         r = ord(key)
@@ -58,11 +54,30 @@ class Communication():
             if hex_swtich==False:
                 return r
             else:
+                return hex(r)[-2:]
+        else:
+            return("$"+str(str_order)+str(hex(r)[-2:]))
+
+
+    # 计算Ascii码的异或和校验-输入
+    @staticmethod
+    def Cal_Xor_Str(str_order,key="$",append_order=False,hex_swtich=False):
+        r = ord(key)
+        for i in list(str_order):
+            r = r^ord(i)
+        if append_order==False:
+
+            if hex_swtich==False:
+                return r
+            else:
                 return hex(r)[2:].zfill(2)
         else:
-            return("$"+str(str_order)+str(hex(r)[2:].zfill(2)))
-
-
+            
+            if hex_swtich==False:
+                return(key + str_order,hex(r).encode('ascii'))
+            else:
+                return(key + str_order+str(hex(r)[2:].zfill(2)))
+            
         
 
     #打开串口
@@ -93,7 +108,6 @@ class Communication():
     #发数据
     def Send_data(self,data):
         self.main_engine_ser.write(data)
-
 
     #更多示例
     # self.main_engine_ser.write(chr(0x06).encode("utf-8")) # 十六制发送一个数据
@@ -151,10 +165,6 @@ if __name__ == '__main__':
     channel_1=Communication()
     channel_1.Print_Name() 
     channel_1.Check()
-    # channel_1.Send_data(b"$3100016")
-
-    channel_1.Send_data(Power_Switch(ini_inensity=0))
-    
-
-
-
+    print(channel_1.Cal_Xor_Str("\x04\x43\x57\x58\x01",key='\x01',append_order=False,hex_swtich=True))
+    # channel_1.Send_data(b'\xE9\x01\x03\x43\x52\x58\x48\x03')
+    # print(channel_1.Read_Line())
