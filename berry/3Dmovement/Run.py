@@ -65,7 +65,7 @@ if __name__ == '__main__':
                 order_list=i.split(",")
                 GPIO.Forward(3,dir=int(order_list[0]),steps=int(order_list[1]))
                 UVcontrol.Communication(com=uv_com).Send_data(UVcontrol.Power_Switch(ini_inensity=int(order_list[2])))
-                time.sleep(int(order_list[3]))
+                time.sleep(float(order_list[3]))
                 n+=1
                 print('Finish Round: ',n)
                 
